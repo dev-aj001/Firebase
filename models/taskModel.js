@@ -1,4 +1,4 @@
-const { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } = require("firebase/firestore");
+const { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc } = require("firebase/firestore");
 const { db } = require("../firebase/firebaseConfig");
 
 async function getAllTasks(username) {
@@ -13,38 +13,35 @@ async function getAllTasks(username) {
   return tasks;
 }
 
+// Validaciones listas
 async function createTask(username, data) {
 
-  let docRef;
+  await addDoc(collection(db, "Usuarios", username, "tareas"), data);
 
-  const newTask = {
-    titulo: data.titulo,
-    descripcion: data.descripcion,
-    estado: false
-  }
-
-  try {
-    docRef = await addDoc(collection(db, "Usuarios", username, "tareas"), newTask);
-
-  } catch (e) {
-    console.error("Error adding document: ", e);
-  }
-
-  return newTask;
+  return data;
 }
 
+
+// 
 async function updateTaskById(username, id, data) {
   const task = doc(db, "Usuarios", username, "tareas", id);
-
-  await updateDoc(task, {
-    estado: data.estado
-  });
-
-  return task;
+  await updateDoc(task, data);
+  return data;
 }
 
 async function deleteTaskById(username, id) {
-  await deleteDoc(doc(db, "Usuarios", username, "tareas", id));
+  const taskRef = doc(db, "Usuarios", username, "tareas", id);
+  const taskSnap = await getDoc(taskRef);
+  
+
+  console.log(taskSnap.data());
+
+  if(!taskSnap)
+    return null;
+    
+  await deleteDoc(taskRef);
+
+  return taskSnap.data();
 }
 
 module.exports = {
